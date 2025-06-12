@@ -1,0 +1,65 @@
+Challenge:
+
+Players closer to the camera appear significantly larger than those farther away, leading to misleading distance calculations.
+
+✅ Solution:
+
+Theoretical Solution:
+
+Perspective distortion arises from the use of a monocular (single) camera, which flattens the 3D world onto a 2D plane. This makes closer players appear larger and distant ones smaller.
+
+To correct this, a homography matrix can be computed using known points on the tennis court (e.g., corners or lines), allowing us to project detected player coordinates from the image plane onto the actual court plane.
+
+Homography maps points from image coordinates  to real-world coordinates :
+[ X ]     [ h11 h12 h13 ]   [ x ]
+[ Y ]  ~  [ h21 h22 h23 ] * [ y ]
+[ W ]     [ h31 h32 h33 ]   [ 1 ]
+
+🧠 Code-Based Solution:
+
+If you’ve annotated court lines or corners, you can define pixel-to-world correspondences and use OpenCV to calculate the homography:
+
+import cv2
+import numpy as np
+
+# Define 4 points on the image (clockwise)
+image_pts = np.array([
+    [a, b],  # top-left corner of court
+    [c, d],  # top-right corner
+    [e, f],  # bottom-left corner
+    [g, h]   # bottom-right corner
+], dtype=np.float32)
+
+# Corresponding real-world coordinates (in meters)
+court_pts = np.array([
+    [0, 0],
+    [11.89, 0],       # full singles court width
+    [0, 23.77],       # full court length
+    [11.89, 23.77]
+], dtype=np.float32)
+
+# Compute homography
+H, _ = cv2.findHomography(image_pts, court_pts)
+
+def warp_to_real_world(x, y, H):
+    pt = np.array([x, y, 1.0]).reshape((3, 1))
+    real = np.dot(H, pt)
+    real /= real[2]
+    return float(real[0]), float(real[1])
+
+# Example usage:
+x_img, y_img = 640, 400
+x_real, y_real = warp_to_real_world(x_img, y_img, H)
+print(f"Real world coordinates: ({x_real:.2f}, {y_real:.2f}) meters")
+
+##  Simpler Approximate Method:
+
+If homography is unavailable, apply a perspective correction factor based on bounding box Y-position:
+
+def correct_pixel_distance(y_coord, pixel_distance, frame_height):
+    correction_factor = 1.0 - (y_coord / frame_height) * 0.5
+    return pixel_distance * correction_factor
+
+
+This gives a decent approximation assuming the bottom of the frame corresponds to the net side (closer) and the top to the baseline (far).
+
