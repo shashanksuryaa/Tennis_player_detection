@@ -79,6 +79,8 @@ You’ll get an output video named `output_annotated.mp4` with everything drawn 
 
 ---
 
-## License
+## Difficulty Faced
 
-MIT. Use it, modify it, improve it.
+- The model needed a big training set which could be obtained by manually saving frames and marking player with racket.
+- The player closer to camera is nicely visible hence could be identified easily but doesn't goes the same for away player due to input video quality.
+
