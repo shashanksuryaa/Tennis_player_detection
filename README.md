@@ -1,67 +1,37 @@
-# Tennis Player Tracker 🎾
+# 🎾 Tennis Player Tracking with Court Verification
 
-This project tracks tennis players in a match using a custom-trained YOLO model (to detect players with rackets), Deep SORT for tracking them over time, and some basic geometry to make sure we only track when the camera is showing the full court.
+This project tracks two tennis players in a match video using YOLOv8 and Deep SORT, calculates their total movement in meters, and intelligently avoids tracking during non-game camera angles (e.g., replays, close-ups).
 
----
+## 📌 Project Objectives
 
-## What it does
+- Detect and track both tennis players throughout a match.
+- Accurately compute how much each player moves (in meters).
+- Ignore frames where the court is not fully visible (camera cuts, zoom-ins).
+- Output an annotated video with bounding boxes, trails, and distance data.
 
-- Detects players holding rackets using a custom YOLOv8 model
-- Tracks their positions consistently using Deep SORT
-- Measures how far each player moves (in meters)
-- Skips tracking during replays, close-ups, or zoomed-in scenes
-- Outputs a video with bounding boxes, player labels, and distance traveled
+## 🧠 Approach & Logic
 
----
+1. **Detection**: YOLOv8 detects people in every frame.
+2. **Tracking**: Deep SORT assigns consistent IDs across frames.
+3. **Filtering**: Tracks must persist long enough to be considered players.
+4. **Court Check**: Edge + Hough Line detection ensures only valid full-court views are analyzed.
+5. **Distance Calculation**: Movement in pixels converted to meters.
+6. **Annotation**: Results overlaid on video and saved.
 
-## Why a custom model?
+## 🚀 How to Run
 
-Most pretrained YOLO models detect "person", which includes ball kids, umpires, etc.  
-With a custom model trained specifically to detect **players with rackets**, we get much cleaner and more relevant results.
+1. Clone the repository or unzip this folder.
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+3. Place your input video as `tennis_video_assignment.mp4` in the same directory.
+4. Run:
+```bash
+python tennis_tracking_with_court_verification.py
+```
 
----
-
-## How it works
-
-1. YOLO detects players in each frame
-2. Deep SORT tracks them across frames and assigns unique IDs
-3. We calculate how far each tracked player moves
-4. Canny + Hough line detection checks if the camera angle is valid (i.e., shows the court)
-5. If the scene is valid, we annotate and track. If not, we pause tracking.
-
----
-
-## To run
-
-1. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Add your input video and name it:
-
-   ```
-   tennis_video_assignment.mp4
-   ```
-
-3. Replace the YOLO model path:
-
-   ```python
-   YOLO_MODEL = 'your_custom_model.pt'
-   ```
-
-4. Run the script:
-
-   ```bash
-   python tennis_tracking_with_court_verification.py
-   ```
-
-You’ll get an output video named `output_annotated.mp4` with everything drawn on it.
-
----
-
-## Dependencies
+## 📦 Dependencies
 
 - ultralytics
 - opencv-python
@@ -69,16 +39,17 @@ You’ll get an output video named `output_annotated.mp4` with everything drawn 
 - scikit-image
 - numpy
 
+## ⚠️ Key Assumptions
+
+- First frame shows a full-court angle.
+- Players appear longer than any non-player.
+- Known pixel-to-meter calibration is used.
+- Input is a clean tennis match video.
+
+## 🚧 Challenges
+
+- Handling non-game camera views
+- Avoiding false positives in replays
+- SSIM false negatives resolved by using court geometry detection
+
 ---
-
-## Notes
-
-- The script assumes the first frame shows the full court.
-- Distance is calculated using the width of a standard singles court (8.23 meters).
-- You can fine-tune the line detection parameters if it misses valid scenes.
-
----
-
-## License
-
-MIT. Use it, modify it, improve it.
